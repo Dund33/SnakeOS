@@ -8,7 +8,7 @@ pub struct Screen{
 
 impl Screen{
     fn advance_pos(&mut self){
-        (self.pos_x, self.pos_y) =
+        (self.pos_y, self.pos_x) =
             if self.pos_x < self.size_x {(self.pos_y, self.pos_x+1)}
             else {(self.pos_y+1, 0)};
     }
