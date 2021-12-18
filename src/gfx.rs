@@ -56,7 +56,7 @@ impl Screen{
         }
     }
 
-    pub fn init() -> Screen{
+    pub const fn init() -> Screen{
         Screen{mem: 0xb8000 as *mut u8, pos_x: 0, pos_y: 0, size_x: 80, size_y:25}
     }
 
