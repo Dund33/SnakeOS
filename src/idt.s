@@ -1,28 +1,45 @@
-.align 8
-
 .global _setup_pic
 _setup_pic:
 push ax
 
 mov al, 0x11
 out 0x20, al //start init
+out 0xA0, al
 
 mov al, 0x20
 out 0x21, al //set offset
 
-mov al, 0x00
-out 0x21, al //no slave pic (for now)
+mov al, 0x28
+out 0xA1, al
+
+mov al, 0x04
+out 0x21, al
+
+mov al, 0x02
+out 0xA1, al
 
 mov al, 0x01
 out 0x21, al //8086 mode
+out 0xA1, al
 
-mov al, 0xfd
-out 0x21, al //mask everything (except kbd)
+mov	al, 0xFD
+out	0x21, al
+mov al, 0xFF
+out 0xA1, al
+
 pop ax
 ret
 
 .global _isr_bus
 _isr_bus:
+cli
+mov al, 0x20
+out 0x20, al
+sti
+iretq
+
+.global _kbrd_isr
+_kbrd_isr:
 cli
 push rdi
 push rax
