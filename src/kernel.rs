@@ -15,7 +15,7 @@ use bootloader::BootInfo;
 use lazy_static::lazy_static;
 use crate::gfx::{Screen, Color, ColorData};
 use crate::idt::{IdtEntry, Idtr, setup_idt};
-use crate::kbrd::Keyboard;
+use crate::kbrd::{Keyboard, scan2ascii};
 use crate::misc::halt;
 
 static mut SCREEN: Screen = Screen::init();
@@ -37,7 +37,11 @@ pub extern "C" fn _start(boot_info: &'static BootInfo){
 
 #[no_mangle]
 pub unsafe extern fn kbrd_handler(scancode: u8){
-   KEYBOARD.last_key = 34;
+    if let Some(ascii) = scan2ascii(scancode){
+        let text: [u8; 1] = [ascii];
+        let color = ColorData{front_color: Color::BrightWhite, back_color: Color::Black};
+        SCREEN.print_str(&text, &color);
+    }
 }
 
 #[panic_handler]
