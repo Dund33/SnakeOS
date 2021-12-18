@@ -1,17 +1,15 @@
-use crate::Screen;
-
-pub struct Keyboard{
+pub struct Keyboard {
     pub last_key: u8,
-    pub buffer: [u8; 16]
+    pub buffer: [u8; 16],
 }
 
-impl Keyboard{
-    pub const fn init_default() -> Keyboard{
-        Keyboard{last_key:0, buffer: [0; 16]}
+impl Keyboard {
+    pub const fn init_default() -> Keyboard {
+        Keyboard { last_key: 0, buffer: [0; 16] }
     }
 }
 
-pub fn scan2ascii(scancode: u8) -> Option<u8>{
+pub fn scan2ascii(scancode: u8) -> Option<u8> {
     match scancode {
         0x01 => Some(0x1B),
         0x02 => Some(b'1'),
@@ -51,6 +49,6 @@ pub fn scan2ascii(scancode: u8) -> Option<u8>{
         0x31 => Some(b'N'),
         0x32 => Some(b'M'),
         0x39 => Some(b' '),
-        _    => None
+        _ => None
     }
 }

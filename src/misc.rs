@@ -1,6 +1,6 @@
 use core::arch::asm;
 
-pub fn halt(){
+pub fn halt() {
     unsafe {
         asm!("hlt");
     }
