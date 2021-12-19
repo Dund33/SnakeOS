@@ -26,9 +26,10 @@ pub extern "C" fn _start(_boot_info: &'static BootInfo) {
 
     let text = b"SnakeOS";
     unsafe {
-        SCREEN.print_str_nl(text, &DEFAULT_COLOR);
+        SCREEN.print_str_nl(text, &DEFAULT_COLOR, true);
     }
-    loop {}
+
+    halt();
 }
 
 #[no_mangle]
@@ -36,7 +37,7 @@ pub unsafe extern fn kbrd_handler(scancode: u8) {
     match scan2ascii(scancode) {
         Letter(ascii) => {
             let text: [u8; 1] = [ascii];
-            SCREEN.print_str(&text, &DEFAULT_COLOR);
+            SCREEN.print_str(&text, &DEFAULT_COLOR, true);
         }
 
         Control(code) => {
@@ -51,7 +52,11 @@ pub unsafe extern fn kbrd_handler(scancode: u8) {
 pub unsafe extern fn pit_handler() {
     TIME += 1;
     if TIME % 20 == 0 {
-        SCREEN.print_num_at((TIME / 20) as u64, &DEFAULT_COLOR, 75, 0);
+        SCREEN.print_num_at((TIME / 20) as u64,
+                            &DEFAULT_COLOR,
+                            75,
+                            0,
+                            false);
     }
 }
 
@@ -59,7 +64,7 @@ pub unsafe extern fn pit_handler() {
 fn panic(_: &PanicInfo) -> ! {
     let text = b"PANIK!";
     unsafe {
-        SCREEN.print_str(text, &DEFAULT_COLOR);
+        SCREEN.print_str(text, &DEFAULT_COLOR, false);
     }
     halt();
     loop {}
