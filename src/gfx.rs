@@ -1,3 +1,7 @@
+use crate::Color::{Black, BrightWhite};
+pub static DEFAULT_COLOR: ColorData = ColorData{front_color: BrightWhite, back_color: Black};
+pub static BLACK_COLOR: ColorData = ColorData{front_color: Black, back_color: Black};
+
 #[allow(dead_code)]
 #[derive(Copy, Clone)]
 pub enum Color {
@@ -39,10 +43,15 @@ fn get_color_byte(data: &ColorData) -> u8 {
 impl Screen {
     fn advance_pos(&mut self) {
         (self.pos_y, self.pos_x) =
-            if self.pos_x < self.size_x { (self.pos_y, self.pos_x + 1) } else { (self.pos_y + 1, 0) };
+            if self.pos_x < self.size_x - 1 { (self.pos_y, self.pos_x + 1) } else { (self.pos_y + 1, 0) };
     }
 
-    fn newline(&mut self){
+    fn go_back(&mut self){
+        (self.pos_y, self.pos_x) =
+            if self.pos_x > 0 { (self.pos_y, self.pos_x - 1) } else { (self.pos_y - 1, self.size_x - 1) };
+    }
+
+    pub(crate) fn newline(&mut self){
         self.pos_x = 0;
         self.pos_y += 1;
     }
@@ -87,10 +96,31 @@ impl Screen {
 
         unsafe {
             let addr = self.mem.add((total_pos * 2) as usize);
-            for char in string {
-                addr.write_volatile(*char);
-                addr.add(1).write_volatile(color_byte);
+            for (i, char) in string.iter().enumerate() {
+                addr.add(2 * i).write_volatile(*char);
+                addr.add(2 * i + 1).write_volatile(color_byte);
             }
+        }
+    }
+
+    pub fn print_timestamp(&mut self, time: u16, color: &ColorData){
+        let mut buf = [0u8; 5];
+        let mut mut_time = time;
+        for i in 0..5 {
+            buf[i] = (mut_time % 10) as u8 + b'0';
+            mut_time /= 10;
+        }
+        buf.reverse();
+        self.print_at(&buf, color, 75, 0);
+    }
+
+    pub fn control(&mut self, code: u8){
+        match code {
+            0x08 => {
+                self.go_back();
+                self.print_at(&[b'A'], &BLACK_COLOR, self.pos_x, self.pos_y);
+            },
+            _ => {}
         }
     }
 }

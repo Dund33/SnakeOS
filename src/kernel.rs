@@ -5,9 +5,10 @@ use core::panic::PanicInfo;
 
 use bootloader::BootInfo;
 
-use crate::gfx::{Color, ColorData, Screen};
+use crate::gfx::{Color, ColorData, DEFAULT_COLOR, Screen};
 use crate::idt::setup_idt;
-use crate::kbrd::{Keyboard, scan2ascii};
+use crate::kbrd::{Key, Keyboard, scan2ascii};
+use crate::kbrd::Key::{Control, Letter};
 use crate::misc::halt;
 
 mod gdt;
@@ -24,37 +25,42 @@ static mut TIME: u64 = 0;
 pub extern "C" fn _start(_boot_info: &'static BootInfo) {
     let _idt = setup_idt();
 
-    let color = ColorData { front_color: Color::BrightWhite, back_color: Color::Black };
     let text = b"SnakeOS";
     unsafe {
-        SCREEN.print_str(text, &color);
+        SCREEN.print_str_nl(text, &DEFAULT_COLOR);
     }
-
     loop {}
 }
 
 #[no_mangle]
 pub unsafe extern fn kbrd_handler(scancode: u8) {
-    if let Some(ascii) = scan2ascii(scancode) {
-        let text: [u8; 1] = [ascii];
-        let color = ColorData { front_color: Color::BrightWhite, back_color: Color::Black };
-        SCREEN.print_str_nl(&text, &color);
-    }
+    match scan2ascii(scancode)  {
+        Letter(ascii) => {
+            let text: [u8; 1] = [ascii];
+            SCREEN.print_str(&text, &DEFAULT_COLOR);
+        },
+
+        Control(code) => {
+            SCREEN.control(code);
+        }
+
+        Key::None => {}
+    };
 }
 
 #[no_mangle]
 pub unsafe extern fn pit_handler() {
-    let color = ColorData { front_color: Color::BrightWhite, back_color: Color::Black };
     TIME += 1;
-    SCREEN.print_str_nl(b"SnakeOS", &color);
+    if TIME % 20 == 0{
+        SCREEN.print_timestamp((TIME / 20) as u16, &DEFAULT_COLOR);
+    }
 }
 
 #[panic_handler]
 fn panic(_: &PanicInfo) -> ! {
-    let color = ColorData { front_color: Color::Magenta, back_color: Color::Black };
     let text = b"PANIK!";
     unsafe {
-        SCREEN.print_str(text, &color);
+        SCREEN.print_str(text, &DEFAULT_COLOR);
     }
     halt();
     loop {}
