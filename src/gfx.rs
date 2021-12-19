@@ -73,11 +73,11 @@ impl Screen {
         self.pos_y = max(0, self.pos_y);
     }
 
-    fn down(&mut self){
+    fn down(&mut self) {
         self.pos_y = min(max(0, self.pos_y + 1), self.size_y);
     }
 
-    fn up(&mut self){
+    fn up(&mut self) {
         self.pos_y = min(max(0, self.pos_y - 1), self.size_y);
     }
 
