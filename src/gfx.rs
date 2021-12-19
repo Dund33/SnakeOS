@@ -1,12 +1,10 @@
 use core::arch::global_asm;
-use core::borrow::Borrow;
-use core::cmp::max;
+use core::cmp::{max, min};
 
 use crate::Color::{Black, BrightWhite};
 use crate::misc::num_length;
 
 pub static DEFAULT_COLOR: ColorData = ColorData { front_color: BrightWhite, back_color: Black };
-pub static BLACK_COLOR: ColorData = ColorData { front_color: Black, back_color: Black };
 
 global_asm!(include_str!("vga.s"));
 
@@ -65,6 +63,7 @@ impl Screen {
         (self.pos_y, self.pos_x) =
             if self.pos_x < self.size_x - 1 { (self.pos_y, self.pos_x + 1) }
             else { (self.pos_y + 1, 0) };
+        self.pos_y = min(self.pos_y, self.size_y);
     }
 
     fn go_back(&mut self) {
@@ -72,6 +71,14 @@ impl Screen {
             if self.pos_x > 0 { (self.pos_y, self.pos_x - 1) }
             else { (self.pos_y - 1, self.size_x - 1) };
         self.pos_y = max(0, self.pos_y);
+    }
+
+    fn down(&mut self){
+        self.pos_y = min(max(0, self.pos_y + 1), self.size_y);
+    }
+
+    fn up(&mut self){
+        self.pos_y = min(max(0, self.pos_y - 1), self.size_y);
     }
 
     pub(crate) fn newline(&mut self) {
@@ -149,7 +156,7 @@ impl Screen {
             buf[i] = (mut_num % 10) as u8 + b'0';
             mut_num /= 10;
         }
-        let mut buf_slice = &mut buf[..length];
+        let buf_slice = &mut buf[..length];
         buf_slice.reverse();
         self.print_at(buf_slice, color, pos_x, pos_y, sync_cursor);
     }
@@ -163,6 +170,26 @@ impl Screen {
                               self.pos_x,
                               self.pos_y,
                               false);
+                self.sync_cursor();
+            }
+            0x0D => {
+                self.newline();
+                self.sync_cursor();
+            }
+            0xF1 => {
+                self.up();
+                self.sync_cursor();
+            }
+            0xF2 => {
+                self.go_back();
+                self.sync_cursor();
+            }
+            0xF3 => {
+                self.down();
+                self.sync_cursor();
+            }
+            0xF4 => {
+                self.advance_pos();
                 self.sync_cursor();
             }
             _ => {}

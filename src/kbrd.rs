@@ -32,6 +32,7 @@ pub fn scan2ascii(scancode: u8) -> Key {
         0x17 => Letter(b'I'),
         0x18 => Letter(b'O'),
         0x19 => Letter(b'P'),
+        0x1C => Control(0x0D),
         0x1E => Letter(b'A'),
         0x1F => Letter(b'S'),
         0x20 => Letter(b'D'),
@@ -49,6 +50,10 @@ pub fn scan2ascii(scancode: u8) -> Key {
         0x31 => Letter(b'N'),
         0x32 => Letter(b'M'),
         0x39 => Letter(b' '),
+        0x48 => Control(0xf1),
+        0x4B => Control(0xf2),
+        0x4D => Control(0xf4),
+        0x50 => Control(0xf3),
         _ => Key::None
     }
 }
