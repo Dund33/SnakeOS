@@ -5,9 +5,9 @@ use core::panic::PanicInfo;
 
 use bootloader::BootInfo;
 
-use crate::gfx::{Color, ColorData, DEFAULT_COLOR, Screen};
+use crate::gfx::{Color, DEFAULT_COLOR, Screen};
 use crate::idt::setup_idt;
-use crate::kbrd::{Key, Keyboard, scan2ascii};
+use crate::kbrd::{Key, scan2ascii};
 use crate::kbrd::Key::{Control, Letter};
 use crate::misc::halt;
 
@@ -18,7 +18,6 @@ mod idt;
 mod kbrd;
 
 static mut SCREEN: Screen = Screen::init();
-static mut KEYBOARD: Keyboard = Keyboard::init_default();
 static mut TIME: u64 = 0;
 
 #[no_mangle]
@@ -34,11 +33,11 @@ pub extern "C" fn _start(_boot_info: &'static BootInfo) {
 
 #[no_mangle]
 pub unsafe extern fn kbrd_handler(scancode: u8) {
-    match scan2ascii(scancode)  {
+    match scan2ascii(scancode) {
         Letter(ascii) => {
             let text: [u8; 1] = [ascii];
             SCREEN.print_str(&text, &DEFAULT_COLOR);
-        },
+        }
 
         Control(code) => {
             SCREEN.control(code);
@@ -51,8 +50,8 @@ pub unsafe extern fn kbrd_handler(scancode: u8) {
 #[no_mangle]
 pub unsafe extern fn pit_handler() {
     TIME += 1;
-    if TIME % 20 == 0{
-        SCREEN.print_timestamp((TIME / 20) as u16, &DEFAULT_COLOR);
+    if TIME % 20 == 0 {
+        SCREEN.print_num_at((TIME / 20) as u64, &DEFAULT_COLOR, 75, 0);
     }
 }
 

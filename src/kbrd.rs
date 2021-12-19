@@ -2,21 +2,10 @@ use crate::kbrd::Key::{Control, Letter};
 
 #[allow(dead_code)]
 #[derive(Copy, Clone)]
-pub enum Key{
+pub enum Key {
     Letter(u8),
     Control(u8),
-    None
-}
-
-pub struct Keyboard {
-    pub last_key: u8,
-    pub buffer: [u8; 16],
-}
-
-impl Keyboard {
-    pub const fn init_default() -> Self {
-        Keyboard { last_key: 0, buffer: [0; 16] }
-    }
+    None,
 }
 
 pub fn scan2ascii(scancode: u8) -> Key {

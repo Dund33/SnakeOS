@@ -6,9 +6,11 @@
 _move_cursor:
 push ax
 push bx
+
 in 0x3DA, al //discard input
-in 0x3C0, bh
-in 0x3C1, bl
+in 0x3C0, bh //read address register
+in 0x3C1, bl //read data register
+
 mov al, dh //high bits
 
 mov al, dl //low bits
