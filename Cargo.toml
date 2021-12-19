@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 bootloader = "0.9.8"
+volatile = "0.4.4"
 
 [[bin]]
 path = "src/kernel.rs"

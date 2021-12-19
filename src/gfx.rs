@@ -42,6 +42,11 @@ impl Screen {
             if self.pos_x < self.size_x { (self.pos_y, self.pos_x + 1) } else { (self.pos_y + 1, 0) };
     }
 
+    fn newline(&mut self){
+        self.pos_x = 0;
+        self.pos_y += 1;
+    }
+
     fn get_color_addr(&self) -> *mut u8 {
         let total_pos = self.pos_x + self.size_x * self.pos_y;
         unsafe {
@@ -67,6 +72,24 @@ impl Screen {
                 self.get_text_addr().write_volatile(*char);
                 self.get_color_addr().write_volatile(color_byte);
                 self.advance_pos();
+            }
+        }
+    }
+
+    pub fn print_str_nl(&mut self, string: &[u8], color: &ColorData){
+        self.print_str(string, color);
+        self.newline();
+    }
+
+    pub fn print_at(&self, string: &[u8], color: &ColorData, pos_x: isize, pos_y: isize){
+        let color_byte = get_color_byte(color);
+        let total_pos = pos_x + self.size_x * pos_y;
+
+        unsafe {
+            let addr = self.mem.add((total_pos * 2) as usize);
+            for char in string {
+                addr.write_volatile(*char);
+                addr.add(1).write_volatile(color_byte);
             }
         }
     }

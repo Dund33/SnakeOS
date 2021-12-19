@@ -19,12 +19,15 @@ pub struct Idtr {
 }
 
 global_asm!(include_str!("idt.s"));
+global_asm!(include_str!("isr.s"));
 
 extern "C" {
     fn _isr_bus();
     fn _kbrd_isr();
+    fn _pit_isr();
     fn _setup_pic();
     fn _load_idt(idtr: u64);
+    fn _setup_pit();
 }
 
 fn isr_for_fn(handler: unsafe extern "C" fn()) -> IdtEntry {
@@ -43,6 +46,7 @@ pub fn setup_idt() -> [IdtEntry; 256] {
     let dummy_entry = isr_for_fn(_isr_bus);
     let mut idt = [dummy_entry; 256];
 
+    idt[32] = isr_for_fn(_pit_isr);
     idt[33] = isr_for_fn(_kbrd_isr);
 
     let idt_addr = idt.as_ptr() as u64;
@@ -50,6 +54,7 @@ pub fn setup_idt() -> [IdtEntry; 256] {
     let idtr_addr = (&idtr as *const Idtr) as u64;
     unsafe {
         _setup_pic();
+        _setup_pit();
         _load_idt(idtr_addr);
     }
     idt

@@ -18,6 +18,7 @@ mod kbrd;
 
 static mut SCREEN: Screen = Screen::init();
 static mut KEYBOARD: Keyboard = Keyboard::init_default();
+static mut TIME: u64 = 0;
 
 #[no_mangle]
 pub extern "C" fn _start(_boot_info: &'static BootInfo) {
@@ -37,8 +38,15 @@ pub unsafe extern fn kbrd_handler(scancode: u8) {
     if let Some(ascii) = scan2ascii(scancode) {
         let text: [u8; 1] = [ascii];
         let color = ColorData { front_color: Color::BrightWhite, back_color: Color::Black };
-        SCREEN.print_str(&text, &color);
+        SCREEN.print_str_nl(&text, &color);
     }
+}
+
+#[no_mangle]
+pub unsafe extern fn pit_handler() {
+    let color = ColorData { front_color: Color::BrightWhite, back_color: Color::Black };
+    TIME += 1;
+    SCREEN.print_str_nl(b"SnakeOS", &color);
 }
 
 #[panic_handler]
