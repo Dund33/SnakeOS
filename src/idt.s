@@ -33,8 +33,10 @@ ret
 .global _isr_bus
 _isr_bus:
 cli
+push ax
 mov al, 0x20
 out 0x20, al
+pop ax
 sti
 iretq
 
