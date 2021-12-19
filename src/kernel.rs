@@ -24,7 +24,7 @@ static mut TIME: u64 = 0;
 pub extern "C" fn _start(_boot_info: &'static BootInfo) {
     let _idt = setup_idt();
 
-    let text = b"SnakeOS";
+    let text = b"=|SnakeOS|=";
     unsafe {
         SCREEN.print_str_nl(text, &DEFAULT_COLOR, true);
     }
@@ -62,7 +62,7 @@ pub unsafe extern fn pit_handler() {
 
 #[panic_handler]
 fn panic(_: &PanicInfo) -> ! {
-    let text = b"PANIK!";
+    let text = b"___PANIK!___";
     unsafe {
         SCREEN.print_str(text, &DEFAULT_COLOR, false);
     }
