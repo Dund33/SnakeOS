@@ -1,4 +1,6 @@
 #![no_std]
+#![feature(global_asm)]
+#![feature(asm)]
 #![no_main]
 
 use core::panic::PanicInfo;
@@ -10,12 +12,14 @@ use crate::idt::setup_idt;
 use crate::kbrd::{Key, scan2ascii};
 use crate::kbrd::Key::{Control, Letter};
 use crate::misc::halt;
+use crate::mem::mem_total;
 
 mod gdt;
 mod gfx;
 mod misc;
 mod idt;
 mod kbrd;
+mod mem;
 
 static mut SCREEN: Screen = Screen::init();
 static mut TIME: u64 = 0;
