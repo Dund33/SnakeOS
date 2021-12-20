@@ -1,6 +1,4 @@
 #![no_std]
-#![feature(global_asm)]
-#![feature(asm)]
 #![no_main]
 
 use core::panic::PanicInfo;
@@ -23,16 +21,20 @@ mod mem;
 
 static mut SCREEN: Screen = Screen::init();
 static mut TIME: u64 = 0;
+static HELLO_STRING: &[u8; 11] = b"=|SnakeOS|=";
 
 #[no_mangle]
 pub extern "C" fn _start(_boot_info: &'static BootInfo) {
     let idt = setup_idt();
     let idt_addr = idt.as_ptr() as u64;
-    let text = b"=|SnakeOS|=";
+    let mem_size = mem_total(&_boot_info.memory_map);
     unsafe {
-        SCREEN.print_str_nl(text, &DEFAULT_COLOR, false);
+        SCREEN.print_str_nl(HELLO_STRING, &DEFAULT_COLOR, false);
         SCREEN.print_str(b"idt@", &DEFAULT_COLOR, false);
         SCREEN.print_num(idt_addr, &DEFAULT_COLOR, false);
+        SCREEN.newline();
+        SCREEN.print_str(b"memsize=", &DEFAULT_COLOR, false);
+        SCREEN.print_num(mem_size, &DEFAULT_COLOR, false);
         SCREEN.newline();
         SCREEN.sync_cursor();
     }
