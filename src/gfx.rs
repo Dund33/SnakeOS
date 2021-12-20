@@ -51,7 +51,7 @@ fn get_color_byte(data: &ColorData) -> u8 {
 }
 
 impl Screen {
-    fn sync_cursor(&self) {
+    pub fn sync_cursor(&self) {
         unsafe {
             let total_pos = (self.pos_x + self.pos_y * self.size_x) as u16;
             self.mem.add((total_pos * 2 + 1) as usize).write_volatile(0x0F);
@@ -116,6 +116,27 @@ impl Screen {
         if sync_cursor {
             self.sync_cursor();
         }
+    }
+
+    pub fn print_num(&mut self, num: u64,
+                     color: &ColorData,
+                     sync_cursor: bool) {
+        let length = num_length(num);
+
+        if length > 16 {
+            return;
+        }
+        let mut mut_num = num;
+        let mut buf = [0u8; 16];
+
+        for i in 0..length {
+            buf[i] = (mut_num % 10) as u8 + b'0';
+            mut_num /= 10;
+        }
+        let buf_slice = &mut buf[..length];
+        buf_slice.reverse();
+
+        self.print_str(buf_slice, color, sync_cursor);
     }
 
     pub fn print_str_nl(&mut self, string: &[u8], color: &ColorData, sync_cursor: bool) {

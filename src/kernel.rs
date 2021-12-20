@@ -22,11 +22,15 @@ static mut TIME: u64 = 0;
 
 #[no_mangle]
 pub extern "C" fn _start(_boot_info: &'static BootInfo) {
-    let _idt = setup_idt();
-
+    let idt = setup_idt();
+    let idt_addr = idt.as_ptr() as u64;
     let text = b"=|SnakeOS|=";
     unsafe {
-        SCREEN.print_str_nl(text, &DEFAULT_COLOR, true);
+        SCREEN.print_str_nl(text, &DEFAULT_COLOR, false);
+        SCREEN.print_str(b"idt@", &DEFAULT_COLOR, false);
+        SCREEN.print_num(idt_addr, &DEFAULT_COLOR, false);
+        SCREEN.newline();
+        SCREEN.sync_cursor();
     }
 
     halt();
