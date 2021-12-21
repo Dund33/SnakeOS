@@ -1,7 +1,5 @@
 #![no_std]
 #![no_main]
-#![feature(const_for)]
-#![feature(array_methods)]
 #![feature(panic_info_message)]
 
 use core::panic::PanicInfo;

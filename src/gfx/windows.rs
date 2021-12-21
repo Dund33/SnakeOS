@@ -16,13 +16,6 @@ pub struct Window {
 impl Window {
     pub fn new(pos_x: isize, pos_y: isize, size_x: isize, size_y: isize) -> Self {
         let color = ColorData { front_color: BrightWhite, back_color: LightBlue };
-        let screen = Screen {
-            mem: 0 as *mut u8,
-            pos_x,
-            pos_y,
-            size_x,
-            size_y,
-        };
 
         let mut buffer = [0; 2048];
         let color_byte = get_color_byte(&color);
@@ -31,6 +24,14 @@ impl Window {
                 buffer[i] = color_byte;
             }
         }
+
+        let screen = Screen {
+            mem: 0 as *mut u8,
+            pos_x: 0,
+            pos_y: 0,
+            size_x,
+            size_y,
+        };
 
         let mut window =
             Window {
@@ -43,9 +44,7 @@ impl Window {
                 screen,
                 present: true,
             };
-        window.screen.pos_y = 0;
-        window.screen.pos_x = 0;
-        window.screen.mem = window.internal_buffer.as_mut_ptr();
+        window.screen.mem = window.internal_buffer.as_mut_ptr() as *mut u8;
         window
     }
 }

@@ -48,7 +48,7 @@ pub struct Screen {
     pub(crate) size_y: isize,
 }
 
-pub fn get_color_byte(data: &ColorData) -> u8 {
+pub const fn get_color_byte(data: &ColorData) -> u8 {
     ((data.back_color as u8) << 4) + data.front_color as u8
 }
 
