@@ -31,7 +31,8 @@ pub extern "C" fn _start(_boot_info: &'static BootInfo) {
     let idt = setup_idt();
     let idt_addr = idt.as_ptr() as u64;
     let mem_size = mem_total(&_boot_info.memory_map);
-    let mut window = Window::new(30, 5, 15, 3);
+    let mut window1 = Window::new(30, 5, 15, 3);
+    let mut window2 = Window::new(45, 15, 15, 3);
     unsafe {
         SCREEN.print_str_nl(HELLO_STRING, &DEFAULT_COLOR, false);
         SCREEN.print_str(b"idt@", &DEFAULT_COLOR, false);
@@ -42,10 +43,14 @@ pub extern "C" fn _start(_boot_info: &'static BootInfo) {
         SCREEN.newline();
         SCREEN.sync_cursor();
     }
-    window.screen.print_str(b"First window in SnakeOS",
-                            &window.color,
-                            false);
-    redraw_window(&window);
+    window1.screen.print_str(b"First window in SnakeOS",
+                             &window1.color,
+                             false);
+    window2.screen.print_str(b"Multiple windows also work!",
+                            &window2.color,
+                    false);
+    redraw_window(&window1);
+    redraw_window(&window2);
     halt();
 }
 
