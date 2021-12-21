@@ -68,8 +68,8 @@ pub unsafe extern fn kbrd_handler(scancode: u8) {
 #[no_mangle]
 pub unsafe extern fn pit_handler() {
     TIME += 1;
-    if TIME % 20 == 0 {
-        SCREEN.print_num_at((TIME / 20) as u64,
+    if TIME % 100 == 0 {
+        SCREEN.print_num_at((TIME / 100) as u64,
                             &DEFAULT_COLOR,
                             75,
                             0,
