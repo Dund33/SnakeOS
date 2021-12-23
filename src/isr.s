@@ -10,8 +10,7 @@ pop edx
 pop ecx
 pop eax
 sti
-hlt
-iret
+iretd
 .endm
 
 .global _isr_bus
@@ -22,7 +21,7 @@ mov al, 0x20
 out 0x20, al
 pop ax
 sti
-iret
+iretd
 
 .global _kbrd_isr
 _kbrd_isr:

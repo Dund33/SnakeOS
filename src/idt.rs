@@ -50,8 +50,8 @@ pub fn setup_idt() -> [IdtEntry; 256] {
     let idtr_addr = (&idtr as *const Idtr) as u32;
     unsafe {
         _setup_pic();
-        //_setup_pit();
         _load_idt(idtr_addr);
+        _setup_pit();
     }
     idt
 }

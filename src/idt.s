@@ -1,5 +1,6 @@
 .global _setup_pic
 _setup_pic:
+cli
 push ax
 
 mov al, 0x11
@@ -22,12 +23,13 @@ mov al, 0x01
 out 0x21, al //8086 mode
 out 0xA1, al
 
-mov	al, 0xFD
+mov	al, 0xFC
 out	0x21, al
 mov al, 0xFF
 out 0xA1, al
 
 pop ax
+sti
 ret
 
 .global _load_idt

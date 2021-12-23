@@ -32,8 +32,6 @@ mov ss, ax
 mov esp, stack_end
 cli
 call _kernel
-int 0
-
 hlt
 loop:
 jmp loop
