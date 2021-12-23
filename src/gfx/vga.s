@@ -4,6 +4,8 @@
 //bl - data register value
 .global _move_cursor
 _move_cursor:
+push edi
+mov di, [esp+8]
 push ax
 push bx
 push dx
@@ -29,5 +31,6 @@ out dx, al
 pop dx
 pop bx
 pop ax
+pop edi
 
 ret

@@ -22,7 +22,7 @@ mov al, 0x01
 out 0x21, al //8086 mode
 out 0xA1, al
 
-mov	al, 0xFC
+mov	al, 0xFD
 out	0x21, al
 mov al, 0xFF
 out 0xA1, al
@@ -33,20 +33,23 @@ ret
 .global _load_idt
 _load_idt:
 cli
-lidt [rdi]
+push ebx
+mov ebx, [esp+8]
+lidt [ebx]
+pop ebx
 sti
 ret
 
 .global _setup_pit
 _setup_pit:
 cli
-push rax
+push eax
 mov al, 0x34            //channel 0, lobyte/hibyte, rate generator
 out 0x43, al
 mov ax, 11932        //ax = 16 bit reload value
 out 0x40,al                       //Set low byte of PIT reload value
 mov al,ah                         //ax = high 8 bits of reload value
 out 0x40,al
-pop rax
+pop eax
 sti
 ret

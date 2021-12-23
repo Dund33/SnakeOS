@@ -1,10 +1,10 @@
 #![no_std]
 #![no_main]
 #![feature(panic_info_message)]
+#![crate_type = "staticlib"]
 
+use core::arch::asm;
 use core::panic::PanicInfo;
-
-use bootloader::BootInfo;
 
 use crate::gfx::{redraw_window, SCREEN};
 use crate::gfx::screen::{ColorData, DEFAULT_COLOR, Screen};
@@ -13,7 +13,6 @@ use crate::gfx::windows::Window;
 use crate::idt::setup_idt;
 use crate::kbrd::{Key, scan2ascii};
 use crate::kbrd::Key::{Control, Letter};
-use crate::mem::mem_total;
 use crate::misc::halt;
 
 mod gdt;
@@ -21,25 +20,22 @@ mod gfx;
 mod misc;
 mod idt;
 mod kbrd;
-mod mem;
 
 static mut TIME: u64 = 0;
 static HELLO_STRING: &[u8; 11] = b"=|SnakeOS|=";
 
 #[no_mangle]
-pub extern "C" fn _start(_boot_info: &'static BootInfo) {
+pub extern "C" fn _kernel() {
     let idt = setup_idt();
-    let idt_addr = idt.as_ptr() as u64;
-    let mem_size = mem_total(&_boot_info.memory_map);
+    let idt_addr = idt.as_ptr() as u32;
+
     let mut window1 = Window::new(30, 5, 15, 3);
     let mut window2 = Window::new(45, 15, 15, 3);
     unsafe {
+        SCREEN.sync_cursor();
         SCREEN.print_str_nl(HELLO_STRING, &DEFAULT_COLOR, false);
         SCREEN.print_str(b"idt@", &DEFAULT_COLOR, false);
-        SCREEN.print_num(idt_addr, &DEFAULT_COLOR, false);
-        SCREEN.newline();
-        SCREEN.print_str(b"memsize=", &DEFAULT_COLOR, false);
-        SCREEN.print_num(mem_size, &DEFAULT_COLOR, false);
+        SCREEN.print_num(idt_addr as u64, &DEFAULT_COLOR, false);
         SCREEN.newline();
         SCREEN.sync_cursor();
     }
@@ -55,8 +51,10 @@ pub extern "C" fn _start(_boot_info: &'static BootInfo) {
 }
 
 #[no_mangle]
-pub unsafe extern fn kbrd_handler(scancode: u8) {
-    match scan2ascii(scancode) {
+pub unsafe extern "C" fn kbrd_handler() {
+    let mut scancode: u8;
+    asm!("in {}, 0x60", out(reg_byte) scancode);
+    match scan2ascii(scancode as u8) {
         Letter(ascii) => {
             let text: [u8; 1] = [ascii];
             SCREEN.print_str(&text, &DEFAULT_COLOR, true);
@@ -71,7 +69,7 @@ pub unsafe extern fn kbrd_handler(scancode: u8) {
 }
 
 #[no_mangle]
-pub unsafe extern fn pit_handler() {
+pub unsafe extern "C" fn pit_handler() {
     TIME += 1;
     if TIME % 100 == 0 {
         SCREEN.print_num_at((TIME / 100) as u64,
