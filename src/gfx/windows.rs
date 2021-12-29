@@ -1,5 +1,6 @@
-use crate::gfx::screen::{ColorData, get_color_byte};
-use crate::gfx::screen::Color::{BrightWhite, LightBlue};
+use crate::gfx::Color::{BrightWhite, LightBlue};
+use crate::gfx::ColorData;
+use crate::gfx::screen::get_color_byte;
 use crate::Screen;
 
 pub struct Window {
@@ -26,6 +27,7 @@ impl Window {
         }
 
         let screen = Screen {
+            color,
             mem: 0 as *mut u8,
             pos_x: 0,
             pos_y: 0,

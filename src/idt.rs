@@ -35,7 +35,7 @@ fn isr_for_fn(handler: unsafe extern "C" fn()) -> IdtEntry {
     let segment_selector = 0x10;
     let flags = 0x8E;
     let reserved = 0;
-    IdtEntry { offset1, segment_selector, reserved, flags, offset2}
+    IdtEntry { offset1, segment_selector, reserved, flags, offset2 }
 }
 
 pub fn setup_idt() -> [IdtEntry; 256] {

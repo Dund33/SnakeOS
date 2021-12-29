@@ -6,14 +6,14 @@
 use core::arch::asm;
 use core::panic::PanicInfo;
 
-use crate::gfx::{redraw_window, SCREEN};
-use crate::gfx::screen::{ColorData, DEFAULT_COLOR, Screen};
-use crate::gfx::screen::Color::{Black, Red};
+use crate::gfx::{ColorData, redraw_window, SCREEN, TextInterface};
+use crate::gfx::Color::{Black, Red};
+use crate::gfx::screen::{DEFAULT_COLOR, Screen};
 use crate::gfx::windows::Window;
 use crate::idt::setup_idt;
 use crate::kbrd::{Key, scan2ascii};
 use crate::kbrd::Key::{Control, Letter};
-use crate::misc::halt;
+use crate::misc::{halt, num_to_ascii};
 
 mod gdt;
 mod gfx;
@@ -25,28 +25,21 @@ static mut TIME: u64 = 0;
 static HELLO_STRING: &[u8; 11] = b"=|SnakeOS|=";
 
 #[no_mangle]
-pub extern "C" fn _kernel() {
+pub unsafe extern "C" fn _kernel() {
     let idt = setup_idt();
     let idt_addr = idt.as_ptr() as u32;
+    let idt_addr_str = num_to_ascii(idt_addr as u64);
 
     let mut window1 = Window::new(30, 5, 15, 3);
     let mut window2 = Window::new(45, 15, 15, 3);
-    unsafe {
-        SCREEN.sync_cursor();
-        SCREEN.print_str_nl(HELLO_STRING, &DEFAULT_COLOR, false);
-        SCREEN.print_str(b"idt@", &DEFAULT_COLOR, false);
-        SCREEN.print_num(idt_addr as u64, &DEFAULT_COLOR, false);
-        SCREEN.newline();
-        SCREEN.sync_cursor();
-    }
-    window1.screen.print_str(b"First window in SnakeOS",
-                             &window1.color,
-                             false);
-    window2.screen.print_str(b"Multiple windows also work!",
-                            &window2.color,
-                    false);
+    SCREEN.print_strln(HELLO_STRING, Some(DEFAULT_COLOR));
+    SCREEN.print_str(b"IDT@", None);
+    SCREEN.print_strln(&idt_addr_str, None);
+    window1.screen.print_str(b"First window in SnakeOS", None);
+    window2.screen.print_str(b"Multiple windows also work!", None);
     redraw_window(&window1);
     redraw_window(&window2);
+    SCREEN.sync_cursor();
     halt();
 }
 
@@ -57,7 +50,7 @@ pub unsafe extern "C" fn kbrd_handler() {
     match scan2ascii(scancode as u8) {
         Letter(ascii) => {
             let text: [u8; 1] = [ascii];
-            SCREEN.print_str(&text, &DEFAULT_COLOR, true);
+            SCREEN.print_str(&text, None);
         }
 
         Control(code) => {
@@ -71,32 +64,26 @@ pub unsafe extern "C" fn kbrd_handler() {
 #[no_mangle]
 pub unsafe extern "C" fn pit_handler() {
     TIME += 1;
-    if TIME % 100 == 0 {
-        SCREEN.print_num_at((TIME / 100) as u64,
-                            &DEFAULT_COLOR,
-                            75,
-                            0,
-                            false);
-    }
+    if TIME % 100 == 0 {}
 }
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    let color = &ColorData { front_color: Red, back_color: Black };
+    let color = ColorData { front_color: Red, back_color: Black };
     unsafe {
         let text = info.message()
             .unwrap()
             .as_str()
             .unwrap_or_else(|| { "Cannot read message string" })
             .as_bytes();
-        SCREEN.print_str_nl(text, color, false);
+        SCREEN.print_strln(text, Some(color));
 
-        let line = info.location().unwrap().line() as u64;
+        /*let line = info.location().unwrap().line() as u64;
         SCREEN.print_num(line, color, false);
 
         let file = info.location().unwrap().file();
         SCREEN.newline();
-        SCREEN.print_str(file.as_bytes(), color, false);
+        SCREEN.print_str(file.as_bytes(), Some(color));*/
     }
     halt();
     loop {}
