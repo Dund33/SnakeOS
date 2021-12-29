@@ -68,8 +68,7 @@ impl Screen {
 
     pub fn sync_cursor(&self) {
         unsafe {
-            let total_pos = (self.pos_x + self.pos_y * self.size_x) as u16;
-            self.mem.add((total_pos * 2 + 1) as usize).write_volatile(0x0F);
+            let total_pos = (self.pos_x + self.pos_y * self.size_y) as u16;
             _move_cursor(total_pos);
         }
     }
