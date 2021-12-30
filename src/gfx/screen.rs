@@ -1,9 +1,9 @@
 use core::arch::global_asm;
 use core::cmp::{max, min};
 
-use crate::gfx::{Color, ColorData, TextInterface, WindowInterface};
-use crate::gfx::Color::{Black, BrightWhite};
 use crate::gfx::windows::Window;
+use crate::gfx::Color::{Black, BrightWhite};
+use crate::gfx::{Color, ColorData, TextInterface, WindowInterface};
 
 pub static DEFAULT_COLOR: ColorData = ColorData {
     front_color: Color::BrightWhite,
@@ -32,11 +32,12 @@ pub fn get_color_data(addr: *const u8) -> ColorData {
     unsafe {
         let val = addr.read_volatile();
 
-        let foreground = Color::try_from(val & 0xF)
-            .unwrap();
-        let background = Color::try_from(val >> 4)
-            .unwrap();
-        ColorData { back_color: background, front_color: foreground }
+        let foreground = Color::try_from(val & 0xF).unwrap();
+        let background = Color::try_from(val >> 4).unwrap();
+        ColorData {
+            back_color: background,
+            front_color: foreground,
+        }
     }
 }
 
@@ -67,7 +68,13 @@ impl TextInterface for Screen {
         self.sync_cursor();
     }
 
-    fn print_str_at(&mut self, string: &[u8], pos_x: isize, pos_y: isize, color: Option<ColorData>) {
+    fn print_str_at(
+        &mut self,
+        string: &[u8],
+        pos_x: isize,
+        pos_y: isize,
+        color: Option<ColorData>,
+    ) {
         let old_coords = (self.pos_x, self.pos_y);
         (self.pos_x, self.pos_y) = (pos_x, pos_y);
         self.print_str(string, color);
@@ -83,7 +90,8 @@ impl WindowInterface for Screen {
             let row_begin_pos_screen = (window.pos_x + self.size_x * (y + window.pos_y)) as usize;
             let buffer = &window.internal_buffer[row_begin_pos_window * 2..row_end_pos_window * 2];
             unsafe {
-                self.mem.add(row_begin_pos_screen * 2)
+                self.mem
+                    .add(row_begin_pos_screen * 2)
                     .copy_from_nonoverlapping(buffer.as_ptr(), window.size_x as usize * 2);
             }
         }
@@ -92,8 +100,18 @@ impl WindowInterface for Screen {
 
 impl Screen {
     pub(crate) const fn init() -> Self {
-        let color = ColorData { back_color: Black, front_color: BrightWhite };
-        Screen { mem: 0xb8000 as *mut u8, pos_x: 0, pos_y: 0, size_x: 80, size_y: 25, color }
+        let color = ColorData {
+            back_color: Black,
+            front_color: BrightWhite,
+        };
+        Screen {
+            mem: 0xb8000 as *mut u8,
+            pos_x: 0,
+            pos_y: 0,
+            size_x: 80,
+            size_y: 25,
+            color,
+        }
     }
 
     pub fn sync_cursor(&self) {
@@ -104,14 +122,20 @@ impl Screen {
     }
 
     fn advance_pos(&mut self) {
-        (self.pos_y, self.pos_x) =
-            if self.pos_x < self.size_x - 1 { (self.pos_y, self.pos_x + 1) } else { (self.pos_y + 1, 0) };
+        (self.pos_y, self.pos_x) = if self.pos_x < self.size_x - 1 {
+            (self.pos_y, self.pos_x + 1)
+        } else {
+            (self.pos_y + 1, 0)
+        };
         self.pos_y = min(self.pos_y, self.size_y);
     }
 
     fn go_back(&mut self) {
-        (self.pos_y, self.pos_x) =
-            if self.pos_x > 0 { (self.pos_y, self.pos_x - 1) } else { (self.pos_y - 1, self.size_x - 1) };
+        (self.pos_y, self.pos_x) = if self.pos_x > 0 {
+            (self.pos_y, self.pos_x - 1)
+        } else {
+            (self.pos_y - 1, self.size_x - 1)
+        };
         self.pos_y = max(0, self.pos_y);
     }
 
@@ -130,16 +154,12 @@ impl Screen {
 
     fn get_color_addr(&self) -> *mut u8 {
         let total_pos = self.pos_x + self.size_x * self.pos_y;
-        unsafe {
-            self.mem.add((total_pos * 2 + 1) as usize)
-        }
+        unsafe { self.mem.add((total_pos * 2 + 1) as usize) }
     }
 
     fn get_text_addr(&self) -> *mut u8 {
         let total_pos = self.pos_x + self.size_x * self.pos_y;
-        unsafe {
-            self.mem.add((total_pos * 2) as usize)
-        }
+        unsafe { self.mem.add((total_pos * 2) as usize) }
     }
 
     pub fn control(&mut self, code: u8) {
@@ -174,4 +194,3 @@ impl Screen {
         }
     }
 }
-

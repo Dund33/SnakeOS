@@ -35,7 +35,13 @@ fn isr_for_fn(handler: unsafe extern "C" fn()) -> IdtEntry {
     let segment_selector = 0x10;
     let flags = 0x8E;
     let reserved = 0;
-    IdtEntry { offset1, segment_selector, reserved, flags, offset2 }
+    IdtEntry {
+        offset1,
+        segment_selector,
+        reserved,
+        flags,
+        offset2,
+    }
 }
 
 pub fn setup_idt() -> [IdtEntry; 256] {
@@ -46,7 +52,10 @@ pub fn setup_idt() -> [IdtEntry; 256] {
     idt[33] = isr_for_fn(_kbrd_isr);
 
     let idt_addr = idt.as_ptr() as u32;
-    let idtr = Idtr { base: idt_addr, limit: 2048 };
+    let idtr = Idtr {
+        base: idt_addr,
+        limit: 2048,
+    };
     let idtr_addr = (&idtr as *const Idtr) as u32;
     unsafe {
         _setup_pic();

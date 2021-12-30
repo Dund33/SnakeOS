@@ -1,8 +1,8 @@
 use crate::gfx::windows::Window;
 use crate::Screen;
 
-pub mod windows;
 pub mod screen;
+pub mod windows;
 
 pub static mut SCREEN: Screen = Screen::init();
 
@@ -48,7 +48,7 @@ impl TryFrom<u8> for Color {
             0x0D => Ok(Color::LightMagenta),
             0x0E => Ok(Color::Yellow),
             0x0F => Ok(Color::BrightWhite),
-            _ => Result::Err(())
+            _ => Result::Err(()),
         }
     }
 }

@@ -1,6 +1,6 @@
+use crate::gfx::screen::get_color_byte;
 use crate::gfx::Color::{BrightWhite, LightBlue};
 use crate::gfx::ColorData;
-use crate::gfx::screen::get_color_byte;
 use crate::Screen;
 
 pub struct Window {
@@ -16,7 +16,10 @@ pub struct Window {
 
 impl Window {
     pub fn new(pos_x: isize, pos_y: isize, size_x: isize, size_y: isize) -> Self {
-        let color = ColorData { front_color: BrightWhite, back_color: LightBlue };
+        let color = ColorData {
+            front_color: BrightWhite,
+            back_color: LightBlue,
+        };
 
         let mut buffer = [0; 2048];
         let color_byte = get_color_byte(&color);
@@ -35,19 +38,17 @@ impl Window {
             size_y,
         };
 
-        let mut window =
-            Window {
-                pos_x,
-                pos_y,
-                size_x,
-                size_y,
-                color,
-                internal_buffer: buffer,
-                screen,
-                present: true,
-            };
+        let mut window = Window {
+            pos_x,
+            pos_y,
+            size_x,
+            size_y,
+            color,
+            internal_buffer: buffer,
+            screen,
+            present: true,
+        };
         window.screen.mem = window.internal_buffer.as_mut_ptr() as *mut u8;
         window
     }
 }
-

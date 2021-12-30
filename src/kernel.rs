@@ -6,20 +6,20 @@
 use core::arch::asm;
 use core::panic::PanicInfo;
 
-use crate::gfx::{ColorData, redraw_window, SCREEN, TextInterface};
-use crate::gfx::Color::{Black, Red};
-use crate::gfx::screen::{DEFAULT_COLOR, Screen};
+use crate::gfx::screen::{Screen, DEFAULT_COLOR};
 use crate::gfx::windows::Window;
+use crate::gfx::Color::{Black, Red};
+use crate::gfx::{redraw_window, ColorData, TextInterface, SCREEN};
 use crate::idt::setup_idt;
-use crate::kbrd::{Key, scan2ascii};
 use crate::kbrd::Key::{Control, Letter};
+use crate::kbrd::{scan2ascii, Key};
 use crate::misc::{halt, num_to_ascii};
 
 mod gdt;
 mod gfx;
-mod misc;
 mod idt;
 mod kbrd;
+mod misc;
 
 static mut TIME: u64 = 0;
 static HELLO_STRING: &[u8; 11] = b"=|SnakeOS|=";
@@ -36,7 +36,9 @@ pub unsafe extern "C" fn _kernel() {
     SCREEN.print_str(b"IDT@", None);
     SCREEN.print_strln(&idt_addr_str, None);
     window1.screen.print_str(b"First window in SnakeOS", None);
-    window2.screen.print_str(b"Multiple windows also work!", None);
+    window2
+        .screen
+        .print_str(b"Multiple windows also work!", None);
     redraw_window(&window1);
     redraw_window(&window2);
     SCREEN.sync_cursor();
@@ -69,12 +71,16 @@ pub unsafe extern "C" fn pit_handler() {
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    let color = ColorData { front_color: Red, back_color: Black };
+    let color = ColorData {
+        front_color: Red,
+        back_color: Black,
+    };
     unsafe {
-        let text = info.message()
+        let text = info
+            .message()
             .unwrap()
             .as_str()
-            .unwrap_or_else(|| { "Cannot read message string" })
+            .unwrap_or_else(|| "Cannot read message string")
             .as_bytes();
         SCREEN.print_strln(text, Some(color));
 

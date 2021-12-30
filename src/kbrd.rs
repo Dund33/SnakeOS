@@ -54,6 +54,6 @@ pub fn scan2ascii(scancode: u8) -> Key {
         0x4B => Control(0xf2),
         0x4D => Control(0xf4),
         0x50 => Control(0xf3),
-        _ => Key::None
+        _ => Key::None,
     }
 }
