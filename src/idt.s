@@ -48,7 +48,7 @@ cli
 push eax
 mov al, 0x34            //channel 0, lobyte/hibyte, rate generator
 out 0x43, al
-mov ax, 11932        //ax = 16 bit reload value
+mov ax, 119318        //ax = 16 bit reload value
 out 0x40,al                       //Set low byte of PIT reload value
 mov al,ah                         //ax = high 8 bits of reload value
 out 0x40,al

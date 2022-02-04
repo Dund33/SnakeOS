@@ -1,5 +1,7 @@
 use core::arch::global_asm;
 use core::cmp::{max, min};
+use core::sync::atomic::AtomicBool;
+use core::sync::atomic::Ordering;
 
 use crate::gfx::windows::Window;
 use crate::gfx::Color::{Black, BrightWhite};
@@ -22,6 +24,7 @@ pub struct Screen {
     pub(crate) pos_y: isize,
     pub(crate) size_x: isize,
     pub(crate) size_y: isize,
+    pub(crate) busy: AtomicBool,
 }
 
 pub const fn get_color_byte(data: &ColorData) -> u8 {
@@ -47,6 +50,8 @@ impl TextInterface for Screen {
     }
 
     fn print_str(&mut self, string: &[u8], color: Option<ColorData>) {
+        while self.busy.load(Ordering::Relaxed) {}
+        self.busy.store(true, Ordering::Relaxed);
         let text_color = color.unwrap_or_else(|| {
             let color_address = self.get_color_addr();
             get_color_data(color_address)
@@ -60,6 +65,7 @@ impl TextInterface for Screen {
             }
         }
         self.sync_cursor();
+        self.busy.store(false, Ordering::Relaxed);
     }
 
     fn print_strln(&mut self, string: &[u8], color: Option<ColorData>) {
@@ -75,15 +81,25 @@ impl TextInterface for Screen {
         pos_y: isize,
         color: Option<ColorData>,
     ) {
+        while self.busy.load(Ordering::Relaxed) {}
+        self.busy.store(true, Ordering::Relaxed);
         let old_coords = (self.pos_x, self.pos_y);
         (self.pos_x, self.pos_y) = (pos_x, pos_y);
+        self.busy.store(false, Ordering::Relaxed);
+
         self.print_str(string, color);
+
+        while self.busy.load(Ordering::Relaxed) {}
+        self.busy.store(true, Ordering::Relaxed);
         (self.pos_x, self.pos_y) = old_coords;
+        self.busy.store(false, Ordering::Relaxed);
     }
 }
 
 impl WindowInterface for Screen {
     fn draw_window(&mut self, window: &Window) {
+        while self.busy.load(Ordering::Relaxed){}
+        self.busy.store(true, Ordering::Relaxed);
         for y in 0..window.size_y {
             let row_begin_pos_window = (y * window.size_x) as usize;
             let row_end_pos_window = row_begin_pos_window + window.size_x as usize - 1;
@@ -95,6 +111,7 @@ impl WindowInterface for Screen {
                     .copy_from_nonoverlapping(buffer.as_ptr(), window.size_x as usize * 2);
             }
         }
+        self.busy.store(false, Ordering::Relaxed);
     }
 }
 
@@ -111,6 +128,7 @@ impl Screen {
             size_x: 80,
             size_y: 25,
             color,
+            busy: AtomicBool::new(false),
         }
     }
 

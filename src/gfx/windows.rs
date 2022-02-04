@@ -2,6 +2,7 @@ use crate::gfx::screen::get_color_byte;
 use crate::gfx::Color::{BrightWhite, LightBlue};
 use crate::gfx::ColorData;
 use crate::Screen;
+use core::sync::atomic::AtomicBool;
 
 pub struct Window {
     pub pos_x: isize,
@@ -36,6 +37,7 @@ impl Window {
             pos_y: 0,
             size_x,
             size_y,
+            busy: AtomicBool::new(false),
         };
 
         let mut window = Window {
