@@ -7,3 +7,7 @@ pub fn mem_total(mem_map: &MemoryMap) -> u64 {
         .map(|x| { x.range.end_addr() - x.range.start_addr() })
         .sum()
 }
+
+pub fn alloc(size: u16) -> u8 {
+
+}
