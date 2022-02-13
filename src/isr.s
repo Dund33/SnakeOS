@@ -13,13 +13,15 @@ sti
 iretd
 .endm
 
+.extern TIME
+
 .global _isr_bus
 _isr_bus:
 cli
-push ax
+push eax
 mov al, 0x20
 out 0x20, al
-pop ax
+pop eax
 sti
 iretd
 
@@ -31,23 +33,30 @@ isr kbrd_handler
 .global _pit_isr
 _pit_isr:
 cli
+push eax
+mov eax, DWORD PTR TIME
+add eax, 1
+mov DWORD PTR TIME, eax
+push edx
+push ebx
+mov edx, 0
+mov ebx, 10
+idiv eax, ebx
 
-//push eax
-//push ebx
-//push ecx
-//push edx
-//push esi
-//push edi
+cmp edx, 0
+jg skip
 
-//mov  eax, DWORD PTR [esp+24] //eip
-//push eax
-
-//mov eax, esp
-//add eax, 32
-//push eax
-
-//mov eax, [esp+36]
-//lahf
-//push eax
+pop ebx
+pop edx
+pop eax
 jmp pit_handler
+
+skip:
+mov al, 0x20
+out 0x20, al
+pop ebx
+pop edx
+pop eax
+sti
+iretd
 

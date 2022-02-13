@@ -3,7 +3,6 @@ extern test
 extern test2
 
 pit_handler:
-cli
 
 push eax
 push ebx
