@@ -32,22 +32,23 @@ isr kbrd_handler
 _pit_isr:
 cli
 
-push eax
-push ebx
-push ecx
-push edx
-push esi
-push edi
+//push eax
+//push ebx
+//push ecx
+//push edx
+//push esi
+//push edi
 
-mov  eax, DWORD PTR [esp+24] //eip
-push eax
+//mov  eax, DWORD PTR [esp+24] //eip
+//push eax
 
-mov eax, esp
-add eax, 40
-push eax
-lahf
-push eax
-//pushfd //push flags
+//mov eax, esp
+//add eax, 32
+//push eax
+
+//mov eax, [esp+36]
+//lahf
+//push eax
 
 jmp pit_handler
 

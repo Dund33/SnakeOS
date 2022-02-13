@@ -5,30 +5,29 @@ extern test2
 pit_handler:
 cli
 
+push eax
+push ebx
 mov eax, [process_num]
 imul eax, descriptor_size
 add eax, task_descriptors ;descriptor address at eax
 
-pop ebx
+mov ebx, [esp + 16]
 mov [eax + 32], ebx ;eflags
 
-pop ebx
+mov ebx, esp
+add ebx, 8
 mov [eax + 28], ebx ;esp
 
-pop ebx
+mov ebx, [esp + 8]
 mov [eax + 24], ebx ;eip
 
-pop ebx
-mov [eax], ebx ;edi
+mov [eax], edi ;edi
 
-pop ebx
-mov [eax + 4], ebx ;esi
+mov [eax + 4], esi ;esi
 
-pop ebx
-mov [eax + 8], ebx ;edx
+mov [eax + 8], edx ;edx
 
-pop ebx
-mov [eax + 12], ebx ;ecx
+mov [eax + 12], ecx ;ecx
 
 pop ebx
 mov [eax + 16], ebx ;ebx
@@ -61,11 +60,17 @@ pop ebx
 
 push eax
 mov eax, [eax + 32]
-sahf
+cmp eax, 0
+je skipped_flags
+
+push eax
+popfd
+
+skipped_flags:
 pop eax
 
-
 mov esp, [eax + 28]
+
 mov eax, [eax + 20]
 
 push eax
@@ -79,7 +84,7 @@ jmp [new_ip]
 section .data
 process_num: db 0
 processes: equ 3
-descriptor_size equ 32
+descriptor_size equ 36
 task_descriptors:
     dd  0
     dd  0
@@ -89,7 +94,7 @@ task_descriptors:
     dd  0 
     dd  0 ;instruction pointer
     dd  0 ;stack pointer
-    ;dd  0 ;flags
+    dd  0 ;flags
     ;-----------
     dd  0
     dd  0
@@ -99,7 +104,7 @@ task_descriptors:
     dd  0
     dd  test ;instruction pointer
     dd  180000h ;stack pointer
-    ;dd  0 ;flags
+    dd  0 ;flags
     ;-----------
     dd  0
     dd  0
@@ -109,7 +114,7 @@ task_descriptors:
     dd  0
     dd  test2 ;instruction pointer
     dd  200000h ;stack pointer
-    ;dd  0 ;flags
+    dd  0 ;flags
 
 new_ip: resb 4
 

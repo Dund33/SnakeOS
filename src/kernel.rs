@@ -76,7 +76,7 @@ pub unsafe extern "C" fn test(){
 #[no_mangle]
 pub unsafe extern "C" fn test2(){
     loop{
-        //SCREEN.print_str_at(b"KENOBI",10,1, None);
+        SCREEN.print_str_at(b"KENOBI",10,1, None);
     }
 }
 
