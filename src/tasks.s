@@ -1,5 +1,6 @@
 global pit_handler
 extern test
+extern kbrd_server
 extern test2
 
 pit_handler:
@@ -102,7 +103,7 @@ task_descriptors:
     dd  0
     dd  0
     dd  0
-    dd  test ;instruction pointer
+    dd  kbrd_server ;instruction pointer
     dd  180000h ;stack pointer
     dd  0 ;flags
     ;-----------
@@ -112,7 +113,7 @@ task_descriptors:
     dd  0
     dd  0
     dd  0
-    dd  test2 ;instruction pointer
+    dd  test ;instruction pointer
     dd  200000h ;stack pointer
     dd  0 ;flags
 

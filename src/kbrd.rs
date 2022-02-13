@@ -1,4 +1,11 @@
 use crate::kbrd::Key::{Control, Letter};
+use crate::SCREEN;
+use core::arch::asm;
+use crate::gfx::TextInterface;
+use core::sync::atomic::AtomicBool;
+use core::sync::atomic::Ordering;
+
+static DATA_RDY: AtomicBool = AtomicBool::new(false);
 
 #[allow(dead_code)]
 #[derive(Copy, Clone)]
@@ -56,4 +63,33 @@ pub fn scan2ascii(scancode: u8) -> Key {
         0x50 => Control(0xf3),
         _ => Key::None,
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn kbrd_server(){
+    loop{
+        if !DATA_RDY.load(Ordering::Relaxed) {
+            continue;
+        }
+        let mut scancode: u8;
+        asm!("in al, 0x60", out("al") scancode);
+        DATA_RDY.store(false, Ordering::Relaxed);
+        match scan2ascii(scancode as u8) {
+            Letter(ascii) => {
+                let text: [u8; 1] = [ascii];
+                SCREEN.print_str(&text, None);
+            }
+
+            Control(code) => {
+                SCREEN.control(code);
+            }
+
+            Key::None => {}
+        };
+    } 
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn kbrd_handler() {
+    DATA_RDY.store(true, Ordering::Relaxed);
 }

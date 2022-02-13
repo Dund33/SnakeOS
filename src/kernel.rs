@@ -2,8 +2,7 @@
 #![no_main]
 #![feature(panic_info_message)]
 #![crate_type = "staticlib"]
-
-use core::arch::asm;
+#![feature(asm_const)]
 use core::panic::PanicInfo;
 
 use crate::gfx::screen::{Screen, DEFAULT_COLOR};
@@ -11,8 +10,6 @@ use crate::gfx::windows::Window;
 use crate::gfx::Color::{Black, Red};
 use crate::gfx::{redraw_window, ColorData, TextInterface, SCREEN};
 use crate::idt::setup_idt;
-use crate::kbrd::Key::{Control, Letter};
-use crate::kbrd::{scan2ascii, Key};
 use crate::misc::{halt, num_to_ascii};
 use volatile::Volatile;
 use volatile::access::ReadOnly;
@@ -22,12 +19,10 @@ mod gfx;
 mod idt;
 mod kbrd;
 mod misc;
-mod tasks;
 
 #[no_mangle]
 static TIME: u64 = 0;
 static HELLO_STRING: &[u8; 11] = b"=|SnakeOS|=";
-static mut CURRENT_TASK: usize = 0;
 static mut VOLATILE_TIME: Volatile<&u64, ReadOnly> = Volatile::new_read_only(&TIME);
 
 #[no_mangle]
@@ -50,24 +45,6 @@ pub unsafe extern "C" fn _kernel() {
     redraw_window(&window2);
     SCREEN.sync_cursor();
     halt();
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn kbrd_handler() {
-    let mut scancode: u8;
-    asm!("in {}, 0x60", out(reg_byte) scancode);
-    match scan2ascii(scancode as u8) {
-        Letter(ascii) => {
-            let text: [u8; 1] = [ascii];
-            SCREEN.print_str(&text, None);
-        }
-
-        Control(code) => {
-            SCREEN.control(code);
-        }
-
-        Key::None => {}
-    };
 }
 
 #[no_mangle]
