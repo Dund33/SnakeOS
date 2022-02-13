@@ -15,7 +15,7 @@ mov ebx, [esp + 16]
 mov [eax + 32], ebx ;eflags
 
 mov ebx, esp
-add ebx, 8
+add ebx, 20
 mov [eax + 28], ebx ;esp
 
 mov ebx, [esp + 8]
@@ -37,12 +37,13 @@ mov [eax + 20], ebx ;eax
 
 mov eax, [process_num]
 inc eax
-cmp eax, [processes]
+cmp eax, processes
 jl num_ok ;its okay lets proceed
 
 mov eax, 0 ;not ok, fix
 
 num_ok: ;now ok
+mov [process_num], eax
 imul eax, descriptor_size
 add eax, task_descriptors ;descriptor address at eax
 mov edi, [eax]

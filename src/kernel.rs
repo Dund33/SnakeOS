@@ -55,11 +55,11 @@ pub unsafe extern "C" fn kbrd_handler() {
     match scan2ascii(scancode as u8) {
         Letter(ascii) => {
             let text: [u8; 1] = [ascii];
-            //SCREEN.print_str(&text, None);
+            SCREEN.print_str(&text, None);
         }
 
         Control(code) => {
-            //SCREEN.control(code);
+            SCREEN.control(code);
         }
 
         Key::None => {}
@@ -68,15 +68,15 @@ pub unsafe extern "C" fn kbrd_handler() {
 
 #[no_mangle]
 pub unsafe extern "C" fn test(){
+    SCREEN.print_str_at(b"HELLO", 1,1,Some(DEFAULT_COLOR));
     loop{
-        SCREEN.print_str_at(b"HELLO", 1,1,Some(DEFAULT_COLOR));
     }
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn test2(){
+    SCREEN.print_str_at(b"KENOBI",1,2, Some(DEFAULT_COLOR));
     loop{
-        SCREEN.print_str_at(b"KENOBI",10,1, None);
     }
 }
 

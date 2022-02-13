@@ -49,6 +49,5 @@ cli
 //mov eax, [esp+36]
 //lahf
 //push eax
-
 jmp pit_handler
 
