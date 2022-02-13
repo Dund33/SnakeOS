@@ -98,7 +98,7 @@ impl TextInterface for Screen {
 
 impl WindowInterface for Screen {
     fn draw_window(&mut self, window: &Window) {
-        while self.busy.load(Ordering::Relaxed){}
+        while self.busy.load(Ordering::Relaxed) {}
         self.busy.store(true, Ordering::Relaxed);
         for y in 0..window.size_y {
             let row_begin_pos_window = (y * window.size_x) as usize;

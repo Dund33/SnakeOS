@@ -1,7 +1,7 @@
+use crate::gfx::TextInterface;
 use crate::kbrd::Key::{Control, Letter};
 use crate::SCREEN;
 use core::arch::asm;
-use crate::gfx::TextInterface;
 use core::sync::atomic::AtomicBool;
 use core::sync::atomic::Ordering;
 
@@ -66,8 +66,8 @@ pub fn scan2ascii(scancode: u8) -> Key {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn kbrd_server(){
-    loop{
+pub unsafe extern "C" fn kbrd_server() {
+    loop {
         if !DATA_RDY.load(Ordering::Relaxed) {
             continue;
         }
@@ -86,7 +86,7 @@ pub unsafe extern "C" fn kbrd_server(){
 
             Key::None => {}
         };
-    } 
+    }
 }
 
 #[no_mangle]
