@@ -38,6 +38,7 @@ impl Window {
             size_x,
             size_y,
             busy: AtomicBool::new(false),
+            console: AtomicBool::new(false),
         };
 
         let mut window = Window {

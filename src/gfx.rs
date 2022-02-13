@@ -70,8 +70,16 @@ pub trait TextInterface {
     fn print_str(&mut self, string: &[u8], color: Option<ColorData>);
     fn print_strln(&mut self, string: &[u8], color: Option<ColorData>);
     fn print_str_at(&mut self, string: &[u8], pos_x: isize, pos_y: isize, color: Option<ColorData>);
+    fn keypress(&mut self, string: u8);
 }
 
 pub trait WindowInterface {
     fn draw_window(&mut self, window: &Window);
+}
+
+pub trait Console {
+    fn enable_console_mode(&mut self);
+    fn control_console(&mut self, code: u8);
+    fn go_back_console(&mut self);
+    fn newline_console(&mut self);
 }

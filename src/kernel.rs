@@ -6,8 +6,8 @@
 use core::panic::PanicInfo;
 
 use crate::gfx::screen::{Screen, DEFAULT_COLOR};
-use crate::gfx::windows::Window;
 use crate::gfx::Color::{Black, Red};
+use crate::gfx::Console;
 use crate::gfx::{redraw_window, ColorData, TextInterface, SCREEN};
 use crate::idt::setup_idt;
 use crate::misc::{halt, num_to_ascii};
@@ -32,17 +32,10 @@ pub unsafe extern "C" fn _kernel() {
     let idt = setup_idt();
     let idt_addr = idt.as_ptr() as u32;
     let idt_addr_str = num_to_ascii(idt_addr as u64);
-
-    let mut window1 = Window::new(30, 5, 15, 3);
-    let mut window2 = Window::new(45, 15, 15, 3);
-    SCREEN.print_strln(&idt_addr_str, None);
-    window1.screen.print_str(b"First window in SnakeOS", None);
-    window2
-        .screen
-        .print_str(b"Multiple windows also work!", None);
-    redraw_window(&window1);
-    redraw_window(&window2);
-    SCREEN.sync_cursor();
+    SCREEN.print_strln(&idt_addr_str, Some(DEFAULT_COLOR));
+    SCREEN.print_strln(b"kernel running", Some(DEFAULT_COLOR));
+    SCREEN.enable_console_mode();
+    SCREEN.print_strln(b"kernel done", Some(DEFAULT_COLOR));
     halt();
 }
 

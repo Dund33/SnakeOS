@@ -84,7 +84,7 @@ jmp [new_ip]
 
 section .data
 process_num: db 0
-processes: equ 3
+processes: equ 2
 descriptor_size equ 36
 task_descriptors:
     dd  0

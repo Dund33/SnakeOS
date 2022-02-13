@@ -1,5 +1,6 @@
 use crate::gfx::TextInterface;
 use crate::kbrd::Key::{Control, Letter};
+use crate::DEFAULT_COLOR;
 use crate::SCREEN;
 use core::arch::asm;
 use core::sync::atomic::AtomicBool;
@@ -67,6 +68,7 @@ pub fn scan2ascii(scancode: u8) -> Key {
 
 #[no_mangle]
 pub unsafe extern "C" fn kbrd_server() {
+    SCREEN.print_strln(b"keyboard server running", Some(DEFAULT_COLOR));
     loop {
         if !DATA_RDY.load(Ordering::Relaxed) {
             continue;
@@ -74,18 +76,7 @@ pub unsafe extern "C" fn kbrd_server() {
         let mut scancode: u8;
         asm!("in al, 0x60", out("al") scancode);
         DATA_RDY.store(false, Ordering::Relaxed);
-        match scan2ascii(scancode as u8) {
-            Letter(ascii) => {
-                let text: [u8; 1] = [ascii];
-                SCREEN.print_str(&text, None);
-            }
-
-            Control(code) => {
-                SCREEN.control(code);
-            }
-
-            Key::None => {}
-        };
+        SCREEN.keypress(scancode);
     }
 }
 

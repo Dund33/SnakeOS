@@ -5,7 +5,11 @@ use core::sync::atomic::Ordering;
 
 use crate::gfx::windows::Window;
 use crate::gfx::Color::{Black, BrightWhite};
-use crate::gfx::{Color, ColorData, TextInterface, WindowInterface};
+use crate::gfx::{Color, ColorData, Console, TextInterface, WindowInterface};
+use crate::kbrd::scan2ascii;
+use crate::kbrd::Key;
+use crate::kbrd::Key::Control;
+use crate::kbrd::Key::Letter;
 
 pub static DEFAULT_COLOR: ColorData = ColorData {
     front_color: Color::BrightWhite,
@@ -25,6 +29,7 @@ pub struct Screen {
     pub(crate) size_x: isize,
     pub(crate) size_y: isize,
     pub(crate) busy: AtomicBool,
+    pub(crate) console: AtomicBool,
 }
 
 pub const fn get_color_byte(data: &ColorData) -> u8 {
@@ -34,7 +39,6 @@ pub const fn get_color_byte(data: &ColorData) -> u8 {
 pub fn get_color_data(addr: *const u8) -> ColorData {
     unsafe {
         let val = addr.read_volatile();
-
         let foreground = Color::try_from(val & 0xF).unwrap();
         let background = Color::try_from(val >> 4).unwrap();
         ColorData {
@@ -44,9 +48,82 @@ pub fn get_color_data(addr: *const u8) -> ColorData {
     }
 }
 
+impl Console for Screen {
+    fn enable_console_mode(&mut self) {
+        self.print_strln(b"entering console mode", Some(DEFAULT_COLOR));
+        self.console.store(true, Ordering::Relaxed);
+    }
+
+    fn go_back_console(&mut self) {
+        let prompt: u8 = '$' as u8;
+        self.pos_x -= 1;
+        unsafe {
+            if self.get_text_addr().read_volatile() == prompt {
+                self.pos_x += 1;
+            }
+        }
+    }
+
+    fn newline_console(&mut self) {
+        self.newline();
+        self.print_str(b"SnakeOS$", Some(DEFAULT_COLOR));
+    }
+
+    fn control_console(&mut self, code: u8) {
+        match code {
+            0x08 => {
+                self.go_back_console();
+                self.print_str(&[0], None);
+                self.go_back_console();
+                self.sync_cursor();
+            }
+            0x0D => {
+                self.newline_console();
+                self.sync_cursor();
+            }
+            0xF1 => {
+                self.up();
+                self.sync_cursor();
+            }
+            0xF2 => {
+                self.go_back();
+                self.sync_cursor();
+            }
+            0xF3 => {
+                self.down();
+                self.sync_cursor();
+            }
+            0xF4 => {
+                self.advance_pos();
+                self.sync_cursor();
+            }
+            _ => {}
+        }
+    }
+}
+
 impl TextInterface for Screen {
     fn set_default_color(&mut self, color: ColorData) {
         self.color = color;
+    }
+
+    fn keypress(&mut self, scancode: u8) {
+        match scan2ascii(scancode) {
+            Letter(ascii) => {
+                let text: [u8; 1] = [ascii];
+                self.print_str(&text, None);
+            }
+
+            Control(code) => {
+                if self.console.load(Ordering::Relaxed) {
+                    self.control_console(code);
+                } else {
+                    self.control_raw(code);
+                }
+            }
+
+            Key::None => {}
+        };
     }
 
     fn print_str(&mut self, string: &[u8], color: Option<ColorData>) {
@@ -129,6 +206,7 @@ impl Screen {
             size_y: 25,
             color,
             busy: AtomicBool::new(false),
+            console: AtomicBool::new(false),
         }
     }
 
@@ -180,7 +258,7 @@ impl Screen {
         unsafe { self.mem.add((total_pos * 2) as usize) }
     }
 
-    pub fn control(&mut self, code: u8) {
+    pub fn control_raw(&mut self, code: u8) {
         match code {
             0x08 => {
                 self.go_back();
