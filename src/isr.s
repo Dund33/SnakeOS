@@ -32,31 +32,6 @@ isr kbrd_handler
 
 .global _pit_isr
 _pit_isr:
-cli
-push eax
-mov eax, DWORD PTR TIME
-add eax, 1
-mov DWORD PTR TIME, eax
-push edx
-push ebx
-mov edx, 0
-mov ebx, 10
-idiv eax, ebx
-
-cmp edx, 0
-jg skip
-
-pop ebx
-pop edx
-pop eax
 jmp pit_handler
 
-skip:
-mov al, 0x20
-out 0x20, al
-pop ebx
-pop edx
-pop eax
-sti
-iretd
 

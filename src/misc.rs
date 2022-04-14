@@ -6,6 +6,18 @@ pub fn halt() {
     }
 }
 
+pub fn cli(){
+    unsafe{
+        asm!("cli");
+    }
+}
+
+pub fn sti(){
+    unsafe{
+        asm!("sti");
+    }
+}
+
 pub const fn num_length(num: u64) -> usize {
     let mut length = 0;
     let mut num_mut = num;
