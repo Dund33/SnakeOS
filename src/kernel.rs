@@ -9,12 +9,9 @@ use core::panic::PanicInfo;
 use crate::gfx::screen::{Screen, DEFAULT_COLOR};
 use crate::gfx::Color::{Black, Red};
 use crate::gfx::Console;
-use crate::gfx::{redraw_window, ColorData, TextInterface, SCREEN};
+use crate::gfx::{ColorData, TextInterface, SCREEN};
 use crate::idt::setup_idt;
 use crate::misc::{cli, halt, num_to_ascii, sti};
-use volatile::access::ReadOnly;
-use volatile::access::ReadWrite;
-use volatile::Volatile;
 use crate::tasks::init_tasks;
 use core::sync::atomic::AtomicU32;
 use core::sync::atomic::Ordering;
@@ -45,23 +42,8 @@ pub unsafe extern "C" fn _kernel() {
     SCREEN.enable_console_mode();
     SCREEN.print_strln(b"kernel done", Some(DEFAULT_COLOR));
     sti();
-    loop{
+    loop {
         halt();
-    }
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn test() {
-    loop {
-        SCREEN.print_str_at(b"HELLO", 1, 1, Some(DEFAULT_COLOR));
-    }
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn test2() {
-    loop {
-        SCREEN.print_strln(b"KENOBI", Some(DEFAULT_COLOR));
-        //delay(100);
     }
 }
 
@@ -70,8 +52,8 @@ pub unsafe fn delay(period: u32) {
     while VOLATILE_TIME.load(Ordering::Relaxed) < time1 + period {}
 }
 
-pub unsafe fn tick(){
-    //VOLATILE_TIME.fetch_add(1, Ordering::Relaxed);
+pub unsafe fn tick() {
+    VOLATILE_TIME.fetch_add(1, Ordering::Relaxed);
 }
 
 #[panic_handler]

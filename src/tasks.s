@@ -48,7 +48,7 @@ mov ebx, [tmp]
 mov [eax], ebx
 call swap
 
-section .data
+section .bss
 tmp:
 resb 4
 new_ip:

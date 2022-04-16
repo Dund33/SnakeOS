@@ -6,14 +6,14 @@ pub fn halt() {
     }
 }
 
-pub fn cli(){
-    unsafe{
+pub fn cli() {
+    unsafe {
         asm!("cli");
     }
 }
 
-pub fn sti(){
-    unsafe{
+pub fn sti() {
+    unsafe {
         asm!("sti");
     }
 }

@@ -5,9 +5,6 @@ use crate::SCREEN;
 use core::arch::asm;
 use core::sync::atomic::AtomicBool;
 use core::sync::atomic::Ordering;
-use crate::cli;
-use crate::sti;
-
 
 static mut DATA_RDY: AtomicBool = AtomicBool::new(false);
 

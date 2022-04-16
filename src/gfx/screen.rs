@@ -208,13 +208,13 @@ impl Screen {
         }
     }
 
-    fn own(&mut self){
+    fn own(&mut self) {
         while self.busy.load(Ordering::Relaxed) {}
         self.busy.store(true, Ordering::Relaxed);
     }
 
-    fn disown(&mut self){
-        while self.busy.load(Ordering::Relaxed){
+    fn disown(&mut self) {
+        while self.busy.load(Ordering::Relaxed) {
             self.busy.store(false, Ordering::Relaxed);
         }
     }
