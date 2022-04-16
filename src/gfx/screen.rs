@@ -55,6 +55,7 @@ impl Console for Screen {
     }
 
     fn go_back_console(&mut self) {
+        self.own();
         let prompt: u8 = '$' as u8;
         self.pos_x -= 1;
         unsafe {
@@ -62,6 +63,7 @@ impl Console for Screen {
                 self.pos_x += 1;
             }
         }
+        self.disown();
     }
 
     fn newline_console(&mut self) {
@@ -127,8 +129,7 @@ impl TextInterface for Screen {
     }
 
     fn print_str(&mut self, string: &[u8], color: Option<ColorData>) {
-        while self.busy.load(Ordering::Relaxed) {}
-        self.busy.store(true, Ordering::Relaxed);
+        self.own();
         let text_color = color.unwrap_or_else(|| {
             let color_address = self.get_color_addr();
             get_color_data(color_address)
@@ -141,8 +142,8 @@ impl TextInterface for Screen {
                 self.advance_pos();
             }
         }
+        self.disown();
         self.sync_cursor();
-        self.busy.store(false, Ordering::Relaxed);
     }
 
     fn print_strln(&mut self, string: &[u8], color: Option<ColorData>) {
@@ -158,25 +159,22 @@ impl TextInterface for Screen {
         pos_y: isize,
         color: Option<ColorData>,
     ) {
-        while self.busy.load(Ordering::Relaxed) {}
-        self.busy.store(true, Ordering::Relaxed);
+        self.own();
         let old_coords = (self.pos_x, self.pos_y);
         (self.pos_x, self.pos_y) = (pos_x, pos_y);
-        self.busy.store(false, Ordering::Relaxed);
+        self.disown();
 
         self.print_str(string, color);
 
-        while self.busy.load(Ordering::Relaxed) {}
-        self.busy.store(true, Ordering::Relaxed);
+        self.own();
         (self.pos_x, self.pos_y) = old_coords;
-        self.busy.store(false, Ordering::Relaxed);
+        self.disown();
     }
 }
 
 impl WindowInterface for Screen {
     fn draw_window(&mut self, window: &Window) {
-        while self.busy.load(Ordering::Relaxed) {}
-        self.busy.store(true, Ordering::Relaxed);
+        self.own();
         for y in 0..window.size_y {
             let row_begin_pos_window = (y * window.size_x) as usize;
             let row_end_pos_window = row_begin_pos_window + window.size_x as usize - 1;
@@ -188,7 +186,7 @@ impl WindowInterface for Screen {
                     .copy_from_nonoverlapping(buffer.as_ptr(), window.size_x as usize * 2);
             }
         }
-        self.busy.store(false, Ordering::Relaxed);
+        self.disown();
     }
 }
 
@@ -210,11 +208,24 @@ impl Screen {
         }
     }
 
-    pub fn sync_cursor(&self) {
+    fn own(&mut self){
+        while self.busy.load(Ordering::Relaxed) {}
+        self.busy.store(true, Ordering::Relaxed);
+    }
+
+    fn disown(&mut self){
+        while self.busy.load(Ordering::Relaxed){
+            self.busy.store(false, Ordering::Relaxed);
+        }
+    }
+
+    pub fn sync_cursor(&mut self) {
+        self.own();
         unsafe {
             let total_pos = (self.pos_x + self.pos_y * self.size_x) as u16;
             _move_cursor(total_pos);
         }
+        self.disown();
     }
 
     fn advance_pos(&mut self) {
@@ -227,25 +238,33 @@ impl Screen {
     }
 
     fn go_back(&mut self) {
+        self.own();
         (self.pos_y, self.pos_x) = if self.pos_x > 0 {
             (self.pos_y, self.pos_x - 1)
         } else {
             (self.pos_y - 1, self.size_x - 1)
         };
         self.pos_y = max(0, self.pos_y);
+        self.disown();
     }
 
     fn down(&mut self) {
+        self.own();
         self.pos_y = min(self.pos_y + 1, self.size_y);
+        self.disown();
     }
 
     fn up(&mut self) {
+        self.own();
         self.pos_y = min(max(0, self.pos_y - 1), self.size_y);
+        self.disown();
     }
 
     pub(crate) fn newline(&mut self) {
+        self.own();
         self.pos_x = 0;
         self.pos_y += 1;
+        self.disown();
     }
 
     fn get_color_addr(&self) -> *mut u8 {

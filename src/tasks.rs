@@ -1,10 +1,14 @@
 use core::sync::atomic::{Ordering};
 use crate::kbrd::kbrd_server;
 use crate::{halt, num_to_ascii, SCREEN, test, TextInterface};
+use crate::tick;
+use crate::test2;
+use volatile::Volatile;
 
-const PROCESSES_TOTAL: usize = 1;
-static mut PROCESSES: [Option<ProcessDescriptor>; PROCESSES_TOTAL+2] = [None, None, None];
-
+const PROCESSES_TOTAL: usize = 2;
+static mut PROCESSES: [Option<ProcessDescriptor>; PROCESSES_TOTAL + 1] = [None, None, None];
+#[no_mangle]
+static mut CURRENT_PROCESS_PTR: u32 = 0;
 static mut CURRENT_PROCESS: usize = 0;
 
 #[derive(Copy, Clone)]
@@ -18,17 +22,6 @@ struct ProcessDescriptor{
 #[derive(Copy, Clone)]
 #[repr(C, packed)]
 struct Context{
-    /*eflags: u32,
-    cs: u32,
-    eip: u32,
-    ebx: u32,
-    ecx: u32,
-    edx: u32,
-    esi: u32,
-    edi: u32,
-    esp: u32,
-    eax: u32*/
-
     eax: u32,
     esp: u32,
     ebp: u32,
@@ -43,13 +36,31 @@ struct Context{
 }
 
 extern "C"{
-    fn switch_to(ctx_addr: u32);
+    fn switch();
 }
 
 pub unsafe fn init_tasks(){
+    PROCESSES[0] =  Some(ProcessDescriptor{
+        slices_left: 6,
+        slices_max: 6,
+        pid: 0,
+        context: Context{
+            eax: 1,
+            ebx: 2,
+            ecx: 3,
+            edx: 4,
+            esi: 5,
+            edi: 6,
+            esp: 7,
+            ebp: 8,
+            eip: 9,
+            cs: 0x10,
+            eflags: 0x2
+        },
+    });
     PROCESSES[2] =  Some(ProcessDescriptor{
         slices_left: 1,
-        slices_max: 64,
+        slices_max: 1,
         pid: 0,
         context: Context{
             eax: 1,
@@ -58,74 +69,57 @@ pub unsafe fn init_tasks(){
             edx: 4,
             esi: 5,
             edi: 6,
-            esp: 0x2127000,
-            ebp: 0x2127000,
-            eip: 0,
-            cs: 0x08,
-            eflags: 0
-        },
-    });
-    PROCESSES[1] =  Some(ProcessDescriptor{
-        slices_left: 64,
-        slices_max: 64,
-        pid: 0,
-        context: Context{
-            eax: 1,
-            ebx: 2,
-            ecx: 3,
-            edx: 4,
-            esi: 5,
-            edi: 6,
-            esp: 0x200000,
-            ebp: 0x200000,
-            eip: (test as *const fn()) as u32,
+            esp: 0x600000,
+            ebp: 0x600008,
+            eip: (tick as *const fn()) as u32,
             cs: 0x10,
-            eflags: 0
+            eflags:0x2
         },
     });
-    PROCESSES[0] = Some(ProcessDescriptor{
-        slices_left: 64,
-        slices_max: 64,
+    PROCESSES[1] = Some(ProcessDescriptor{
+        slices_left: 1,
+        slices_max: 1,
         pid: 0,
         context: Context{
-            eax: 1,
-            ebx: 2,
-            ecx: 3,
-            edx: 4,
-            esi: 5,
-            edi: 6,
-            esp: 0x210000,
-            ebp: 0x210000,
+            eax: 0,
+            ebx: 0,
+            ecx: 0,
+            edx: 0,
+            esi: 0,
+            edi: 0,
+            esp: 0x510000,
+            ebp: 0x510008,
             eip: (kbrd_server as *const fn()) as u32,
             cs: 0x10,
-            eflags: 0
+            eflags: 0x2
         },
     });
+
+    if let Some(ref mut process0) = PROCESSES[CURRENT_PROCESS]{
+        CURRENT_PROCESS_PTR = (&process0.context as *const Context) as u32;
+    }
 }
 
 #[no_mangle]
-unsafe extern "C" fn swap(context: Context){
+unsafe extern "C" fn swap(){
 
+    
+    //tick();
+    let w = num_to_ascii(CURRENT_PROCESS as u64);//current_process.slices_left as u64);
+    SCREEN.print_str_at(&w, 1,1,None);
+    //cli();
     if let Some(ref mut current_process) = PROCESSES[CURRENT_PROCESS]{
-        current_process.context = context;
         current_process.slices_left -= 1;
+       
 
-        if current_process.slices_left > 0{
-            switch_to((&current_process.context as *const Context) as u32);
-        }
-
-        current_process.slices_left = current_process.slices_max;
-
-        CURRENT_PROCESS = (CURRENT_PROCESS+1)%PROCESSES_TOTAL;        
-
-        //let w = num_to_ascii(CURRENT_PROCESS as u64);
-        //SSCREEN.print_strln(&w, None);
-
-        if let Some(ref mut next_process) = PROCESSES[CURRENT_PROCESS]{
-            if next_process.context.eflags == 0{
-                next_process.context.eflags = context.eflags;
+        if current_process.slices_left <= 0{
+            current_process.slices_left = current_process.slices_max;
+            CURRENT_PROCESS = (CURRENT_PROCESS+1)%PROCESSES_TOTAL;
+            
+            if let Some(ref mut next_process) = PROCESSES[CURRENT_PROCESS]{
+                core::ptr::write_volatile((&mut CURRENT_PROCESS_PTR as *mut u32), (&next_process.context as *const Context) as u32);
             }
-            switch_to((&next_process.context as *const Context) as u32);
         }
     }
+    switch();
 }

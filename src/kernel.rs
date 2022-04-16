@@ -16,6 +16,8 @@ use volatile::access::ReadOnly;
 use volatile::access::ReadWrite;
 use volatile::Volatile;
 use crate::tasks::init_tasks;
+use core::sync::atomic::AtomicU32;
+use core::sync::atomic::Ordering;
 
 mod gdt;
 mod gfx;
@@ -27,9 +29,7 @@ mod tasks;
 #[no_mangle]
 static mut TIME: u64 = 0;
 static HELLO_STRING: &[u8; 11] = b"=|SnakeOS|=";
-static mut VOLATILE_TIME: Volatile<&'static mut u64, ReadWrite> = unsafe{
-    Volatile::new(&mut TIME)
-};
+static mut VOLATILE_TIME: AtomicU32 = AtomicU32::new(0);
 
 #[no_mangle]
 pub unsafe extern "C" fn _kernel() {
@@ -45,7 +45,9 @@ pub unsafe extern "C" fn _kernel() {
     SCREEN.enable_console_mode();
     SCREEN.print_strln(b"kernel done", Some(DEFAULT_COLOR));
     sti();
-    halt();
+    loop{
+        halt();
+    }
 }
 
 #[no_mangle]
@@ -58,19 +60,18 @@ pub unsafe extern "C" fn test() {
 #[no_mangle]
 pub unsafe extern "C" fn test2() {
     loop {
-        SCREEN.print_str_at(b"KENOBI", 1, 2, Some(DEFAULT_COLOR));
-        delay(10);
+        SCREEN.print_strln(b"KENOBI", Some(DEFAULT_COLOR));
+        //delay(100);
     }
 }
 
-pub unsafe fn delay(period: u64) {
-    let time1 = VOLATILE_TIME.read();
-    while VOLATILE_TIME.read() < time1 + period {}
+pub unsafe fn delay(period: u32) {
+    let time1 = VOLATILE_TIME.load(Ordering::Relaxed);
+    while VOLATILE_TIME.load(Ordering::Relaxed) < time1 + period {}
 }
 
 pub unsafe fn tick(){
-    let res = VOLATILE_TIME.read();
-    VOLATILE_TIME.write(res+1);
+    //VOLATILE_TIME.fetch_add(1, Ordering::Relaxed);
 }
 
 #[panic_handler]

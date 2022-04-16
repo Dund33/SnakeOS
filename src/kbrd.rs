@@ -5,8 +5,11 @@ use crate::SCREEN;
 use core::arch::asm;
 use core::sync::atomic::AtomicBool;
 use core::sync::atomic::Ordering;
+use crate::cli;
+use crate::sti;
 
-static DATA_RDY: AtomicBool = AtomicBool::new(false);
+
+static mut DATA_RDY: AtomicBool = AtomicBool::new(false);
 
 #[allow(dead_code)]
 #[derive(Copy, Clone)]
@@ -70,17 +73,16 @@ pub fn scan2ascii(scancode: u8) -> Key {
 pub unsafe extern "C" fn kbrd_server() {
     SCREEN.print_strln(b"keyboard server running", Some(DEFAULT_COLOR));
     loop {
-        if !DATA_RDY.load(Ordering::Relaxed) {
-            continue;
+        if DATA_RDY.load(Ordering::Relaxed) {
+            let mut scancode: u8;
+            asm!("in {}, 0x60", out(reg_byte) scancode);
+            SCREEN.keypress(scancode);
+            DATA_RDY.store(false, Ordering::Relaxed);
         }
-        let mut scancode: u8;
-        asm!("in al, 0x60", out("al") scancode);
-        DATA_RDY.store(false, Ordering::Relaxed);
-        SCREEN.keypress(scancode);
     }
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn kbrd_handler() {
-    DATA_RDY.store(true, Ordering::Relaxed);
+    DATA_RDY.store(true, Ordering::Release);
 }

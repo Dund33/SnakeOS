@@ -1,14 +1,12 @@
-extern test
-extern kbrd_server
-extern test2
+extern CURRENT_PROCESS_PTR
 extern swap
-global switch_to
+global switch
 global pit_handler
 
 section .text
-switch_to:
+switch:
 pop eax; return address
-mov eax, [esp]
+mov eax, [CURRENT_PROCESS_PTR]
 mov ebx, [eax+40]
 push ebx
 popfd
@@ -32,17 +30,22 @@ jmp [new_ip]
 pit_handler:
 cli
 mov [tmp], eax
-push ebx
-push ecx
-push edx
-push esi
-push edi
-mov eax, esp
-add eax, 28
-push ebp
-push eax
-mov eax, [tmp]
-push eax
+mov eax, [CURRENT_PROCESS_PTR]
+mov [eax+4], esp
+mov [eax+8], ebp
+mov [eax+12], edi
+mov [eax+16], esi
+mov [eax+20], edx
+mov [eax+24], ecx
+mov [eax+28], ebx
+pop ebx
+mov [eax+32], ebx
+pop ebx
+mov [eax+36], ebx
+pop ebx
+mov [eax+40], ebx
+mov ebx, [tmp]
+mov [eax], ebx
 call swap
 
 section .data
