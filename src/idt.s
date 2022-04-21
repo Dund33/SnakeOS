@@ -35,23 +35,20 @@ ret
 .global _load_idt
 _load_idt:
 cli
-push ebx
-mov ebx, [esp+8]
-lidt [ebx]
-pop ebx
+lidt [rdi]
 sti
 ret
 
 .global _setup_pit
 _setup_pit:
 cli
-push eax
+push rax
 mov al, 0x34            //channel 0, lobyte/hibyte, rate generator
 out 0x43, al
 mov ax, 1193        //ax = 16 bit reload value
 out 0x40,al                       //Set low byte of PIT reload value
 mov al,ah                         //ax = high 8 bits of reload value
 out 0x40,al
-pop eax
+pop rax
 sti
 ret
